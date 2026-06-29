@@ -1,3 +1,9 @@
 langchain
 langchain-groq
 python-dotenv
+
+# Used by prompt04.py (prompt evaluation)
+numpy
+pandas
+scikit-learn
+sentence-transformers
