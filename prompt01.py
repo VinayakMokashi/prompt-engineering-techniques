@@ -24,7 +24,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 # Force UTF-8 stdout so model output with special characters does not crash on Windows.
 sys.stdout.reconfigure(encoding="utf-8")
@@ -33,7 +33,10 @@ sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # temperature=0 -> deterministic output; max_retries lets the client ride out rate limits.
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, max_retries=10)
+# gpt-oss reasons before it answers and those tokens count towards max_tokens.
+# Groq's default cap can cut long answers off; 4096 leaves room for them while
+# keeping prompt + max_tokens within the free tier's 8,000 tokens-per-minute budget.
+llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0, max_tokens=4096, max_retries=10)
 
 
 def few_shot_sentiment_classification(input_text):

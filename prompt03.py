@@ -32,7 +32,7 @@ import random
 from collections import Counter
 
 from langchain_groq import ChatGroq
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from dotenv import load_dotenv
 
 # Force UTF-8 stdout so model output with special characters does not crash on Windows.
@@ -43,7 +43,16 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # temperature=0.3 -> slight randomness so the reasoning paths actually differ;
 # max_retries lets the client wait out the free-tier rate limit instead of failing.
-llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0.3, max_retries=10)
+# gpt-oss reasons before it answers and those tokens count towards max_tokens.
+# reasoning_effort="low": the reasoning paths are written out in the answers, so
+# little hidden reasoning is needed. At the default effort gpt-oss-20b can loop on
+# "use a unique approach" for a trivial question and spend the whole budget
+# without answering.
+# max_tokens=3000 is ample at low effort and leaves room for the aggregation
+# prompt, which carries all three reasoning paths, so prompt + max_tokens stays
+# within the free tier's 8,000 tokens-per-minute budget.
+llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0.3, max_tokens=3000, max_retries=10,
+               reasoning_effort="low")
 
 
 def generate_multiple_paths(problem, num_paths=3):

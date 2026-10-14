@@ -45,7 +45,10 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 class PromptEval:
     def __init__(self):
         # temperature=0 -> deterministic output; max_retries lets the client ride out rate limits.
-        self.llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0, max_retries=10)
+        # gpt-oss reasons before it answers and those tokens count towards max_tokens.
+        # Groq's default cap can cut long answers off; 4096 leaves room for them while
+        # keeping prompt + max_tokens within the free tier's 8,000 tokens-per-minute budget.
+        self.llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0, max_tokens=4096, max_retries=10)
 
         # Compact, fast model that turns sentences into comparable embedding vectors.
         self.sentence_model = SentenceTransformer('all-MiniLM-L6-v2')
